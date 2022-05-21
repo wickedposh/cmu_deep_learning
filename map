@@ -1,0 +1,112 @@
+import numpy as np
+import math, mytorch
+##sigmoid activation
+
+class Activation:
+    def forward(self,Z):
+        self.A=1/(1+math.exp(-1*Z))
+        return self.A
+    def backward(self):
+        dAdZ=self.A-self.A**2
+        return dAdZ
+    
+##MSE loss objective fuction
+
+class Loss:
+    def forward(self,A,Y):
+        self.A=A
+        self.Y=Y
+        N=A.shape[0]
+        C=A.shape[1]
+        n=np.ones((N,1),dtype='f')
+        c=np.ones((C,1),dtype='f')
+        a=np.multiply(A-Y, A-Y)
+        L=np.matmul(n,np.matmul(a,c))
+        
+        return L
+    def backward(self):
+        dLdA=self.A-self.Y
+        return dLdA
+
+##linear layer
+
+class linear:
+    def __init__(self,in_features, out_features):
+        self.W=np.zeros((out_features,in_features))
+        self.b=np.zeros((out_features,1))
+        self.dLdW=np.zeros((out_features,in_features))
+        self.dLdb=np.zeros((out_features,1))
+    def forward(self,A):
+        self.A=A
+        self.N=A.shape[0]
+        self.Ones=np.ones((self.N,1),dtype='f')
+        Z=np.matmul(self.A,self.W)+np.matmul(self.b,self.Ones)
+        return Z
+    def backward(self,dLdZ):
+        dZdA=self.W
+        dZdW=self.A
+        dZdb=self.Ones
+        dLdA=np.matbul(dLdZ,dZdA)
+        dLdW=np.matmul(dLdZ,dZdW)
+        dLdb=np.matbul(dLdZ,dZdb)
+        self.dLdW=dLdW/self.N
+        self.dLdb=dLdb/self.N
+        return dLdA
+
+##Stochastic Gradient Descent
+
+class SGD:
+    def __init__(self,model,lr=0.1,momentum=0):
+        self.l=model.layers
+        self.len(model.layers)
+        self.lr=lr
+        self.mu=momentum
+        self.v_W=[np.zeros(self.l[i].W.shape) for i in range(self.L)]
+        self.v_b=[np.zeros(self.l[i].b.shape) for i in range(self.L)]
+    def step(self):
+        for i in range(self.L):
+            if self.mu==0:
+                self.l[i].W=self.l[i].W-self.l[i].lr*self.l[i].dLdW
+                self.l[i].b=self.l[i].b-self.l[i].lr*self.l[i].dLdb
+            else:
+                self.v_W[i]=self.v_W[i]*self.mu+self.l[i].dLdW
+                self.v_b[i]=self.b[i]*self.mu+self.l[i].dLdb
+                self.l[i].W=self.l[i].W-self.l.lr*self.v_W[i]
+                self.l[i].b=self.l[i].b-self.l.lr*self.v_b[i]
+        return None
+    
+##Multi-layer Perceptrons
+
+class MLP0:
+    def __init__(self):
+        self.layers=[mytorch.nn.Linear(2,3)]
+        self.f=[mytorch.nn.ReLU()]
+    def forward(self,A0):
+        Z0=np.matmul(A0,self.W)+np.matmul(self.Ones,self.b)
+        A1=self.f(Z0)
+        return A1
+    def backward(self,dLdA1):
+        dA1dZ0=self.Ones
+        dLdZ0=np.multiply(dLdA1,dA1dZ0)
+        dLdA0=np.matmul(self.W,dLdZ0)
+        return None
+    
+class MLP1:
+    def __init__(self):
+        self.layers=[mytorch.nn.Linear(2,3),mytorch.nn.Linear(3,3)]
+        self.f=[mytorch.nn.ReLU(),mytorch.nn.ReLU()]
+    def forward(self,A0):
+        Z0=np.matbul(A0,self.layers[0].W)+np.matmul(self.layers[0].Ones,self.layers[0].b)
+        A1=self.f[0](Z0)
+        Z1=np.matmul(A1,self.layers[1].W)+np.matmul(self.layers[1].Ones,self.layers[1].b)
+        A2=self.f[1](Z1)
+        return A2
+    def backward(self,dLdA2):
+        dA2dZ1=self.layers[1].Ones
+        dLdZ1=np.multiply(dLdA2,dA2dZ1)
+        dLdA1=np.matmul(self.layers[1].W,dLdZ1)
+        dA1dZ0=self.layers[0].Ones
+        dLdZ0=np.multiply(dLdA1,dA1dZ0)
+        dLdA0=np.matmul(self.layers[0].W,dLdZ0)        
+        return None        
+     
